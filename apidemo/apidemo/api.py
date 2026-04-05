@@ -3,7 +3,20 @@ from typing import List
 from ninja.errors import HttpError
 from django.shortcuts import get_object_or_404
 from ninja import NinjaAPI, Schema
-from .models import Department, Patient  # Combined these for cleanliness
+from .models import (
+    Appointment,
+    Bill,
+    Department,
+    Doctor,
+    Inpatient,
+    Medicalrecord,
+    Medicine,
+    Patient,
+    Prescription,
+    Prescriptiondetail,
+    Staff,
+    Ward,
+)
 
 #authentication
 from ninja.security import APIKeyCookie
@@ -103,6 +116,133 @@ def handle_http_error(request, exc):
         {"Internal Server Error": str(exc)},
         status=500,
     )
+
+
+def serialize_instance(instance):
+    data = {}
+    for field in instance._meta.fields:
+        key = field.name
+        if field.is_relation:
+            data[key] = getattr(instance, field.attname)
+        else:
+            data[key] = getattr(instance, key)
+    return data
+
+
+def serialize_queryset(queryset):
+    return [serialize_instance(obj) for obj in queryset]
+
+
+@api.get("/appointments", auth=None)
+def get_appointments(request):
+    return serialize_queryset(Appointment.objects.all())
+
+
+@api.get("/appointments/{appointmentid}", auth=None)
+def get_appointment_by_id(request, appointmentid: int):
+    appointment = get_object_or_404(Appointment, appointmentid=appointmentid)
+    return serialize_instance(appointment)
+
+
+@api.get("/bills", auth=None)
+def get_bills(request):
+    return serialize_queryset(Bill.objects.all())
+
+
+@api.get("/bills/{billid}", auth=None)
+def get_bill_by_id(request, billid: int):
+    bill = get_object_or_404(Bill, billid=billid)
+    return serialize_instance(bill)
+
+
+@api.get("/doctors", auth=None)
+def get_doctors(request):
+    return serialize_queryset(Doctor.objects.all())
+
+
+@api.get("/doctors/{doctorid}", auth=None)
+def get_doctor_by_id(request, doctorid: int):
+    doctor = get_object_or_404(Doctor, doctorid=doctorid)
+    return serialize_instance(doctor)
+
+
+@api.get("/inpatients", auth=None)
+def get_inpatients(request):
+    return serialize_queryset(Inpatient.objects.all())
+
+
+@api.get("/inpatients/{admissionid}", auth=None)
+def get_inpatient_by_id(request, admissionid: int):
+    inpatient = get_object_or_404(Inpatient, admissionid=admissionid)
+    return serialize_instance(inpatient)
+
+
+@api.get("/medical-records", auth=None)
+def get_medical_records(request):
+    return serialize_queryset(Medicalrecord.objects.all())
+
+
+@api.get("/medical-records/{recordid}", auth=None)
+def get_medical_record_by_id(request, recordid: int):
+    record = get_object_or_404(Medicalrecord, recordid=recordid)
+    return serialize_instance(record)
+
+
+@api.get("/medicines", auth=None)
+def get_medicines(request):
+    return serialize_queryset(Medicine.objects.all())
+
+
+@api.get("/medicines/{medicineid}", auth=None)
+def get_medicine_by_id(request, medicineid: int):
+    medicine = get_object_or_404(Medicine, medicineid=medicineid)
+    return serialize_instance(medicine)
+
+
+@api.get("/prescriptions", auth=None)
+def get_prescriptions(request):
+    return serialize_queryset(Prescription.objects.all())
+
+
+@api.get("/prescriptions/{prescriptionid}", auth=None)
+def get_prescription_by_id(request, prescriptionid: int):
+    prescription = get_object_or_404(Prescription, prescriptionid=prescriptionid)
+    return serialize_instance(prescription)
+
+
+@api.get("/prescription-details", auth=None)
+def get_prescription_details(request):
+    return serialize_queryset(Prescriptiondetail.objects.all())
+
+
+@api.get("/prescription-details/{prescriptionid}/{medicineid}", auth=None)
+def get_prescription_detail_by_id(request, prescriptionid: int, medicineid: int):
+    detail = get_object_or_404(
+        Prescriptiondetail, prescriptionid_id=prescriptionid, medicineid_id=medicineid
+    )
+    return serialize_instance(detail)
+
+
+@api.get("/staff", auth=None)
+def get_staff(request):
+    return serialize_queryset(Staff.objects.all())
+
+
+@api.get("/staff/{staffid}", auth=None)
+def get_staff_by_id(request, staffid: int):
+    staff = get_object_or_404(Staff, staffid=staffid)
+    return serialize_instance(staff)
+
+
+@api.get("/wards", auth=None)
+def get_wards(request):
+    return serialize_queryset(Ward.objects.all())
+
+
+@api.get("/wards/{roomid}", auth=None)
+def get_ward_by_id(request, roomid: int):
+    ward = get_object_or_404(Ward, roomid=roomid)
+    return serialize_instance(ward)
 
 @api.get("/patients", response=List[PatientSchema],auth=None)
 def get_patients(request):
